@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rastera Site Report — {{ site_name }}</title>
+  <style>
+    /* ── Page layout ──────────────────────────────────────────────────────── */
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-size: 8pt;
+        color: #94a3b8;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Liberation Sans", Arial, Helvetica, sans-serif;
+      font-size: 10pt;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────────── */
+    .header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 4px 4px 0 0;
+    }
+    .header-brand { font-size: 16pt; font-weight: 700; letter-spacing: -0.5px; }
+    .header-brand span { color: #38bdf8; }
+    .header-meta { font-size: 8pt; color: #94a3b8; text-align: right; }
+
+    /* ── Site summary banner ──────────────────────────────────────────────── */
+    .site-banner {
+      background: #f1f5f9;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .site-banner h1 { font-size: 13pt; font-weight: 700; }
+    .site-banner p { font-size: 9pt; color: #475569; margin-top: 2px; }
+
+    /* ── Score gauge ──────────────────────────────────────────────────────── */
+    .score-badge {
+      text-align: center;
+      background: white;
+      border: 2px solid {{ score_color }};
+      border-radius: 8px;
+      padding: 10px 20px;
+      min-width: 100px;
+    }
+    .score-number {
+      font-size: 28pt;
+      font-weight: 800;
+      color: {{ score_color }};
+      line-height: 1;
+    }
+    .score-label {
+      font-size: 8pt;
+      font-weight: 600;
+      color: {{ score_color }};
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .score-sub { font-size: 7.5pt; color: #94a3b8; margin-top: 2px; }
+
+    /* ── Section headings ────────────────────────────────────────────────── */
+    .section { margin: 16px 0 0 0; page-break-inside: avoid; }
+    .section-title {
+      font-size: 10pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #0f172a;
+      border-bottom: 2px solid #0ea5e9;
+      padding-bottom: 3px;
+      margin-bottom: 8px;
+    }
+
+    /* ── Drivers table ───────────────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    th {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 5px 8px;
+      text-align: left;
+      font-weight: 600;
+    }
+    td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    .impact-positive { color: #16a34a; font-weight: 700; }
+    .impact-neutral   { color: #d97706; font-weight: 700; }
+    .impact-negative  { color: #dc2626; font-weight: 700; }
+
+    /* ── Two-column grid ─────────────────────────────────────────────────── */
+    .two-col { display: flex; gap: 14px; }
+    .col { flex: 1; }
+
+    /* ── Stat cards ──────────────────────────────────────────────────────── */
+    .stat-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+    .stat-label { font-size: 7.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
+    .stat-value { font-size: 12pt; font-weight: 700; color: #0f172a; }
+
+    /* ── Competitor pills ────────────────────────────────────────────────── */
+    .pill-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+    .pill {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 12px;
+      padding: 2px 9px;
+      font-size: 8.5pt;
+      font-weight: 600;
+    }
+
+    /* ── AI narrative cards ──────────────────────────────────────────────── */
+    .ai-card {
+      border-left: 3px solid #0ea5e9;
+      padding: 8px 12px;
+      background: #f0f9ff;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 10px;
+      font-size: 9.5pt;
+    }
+    .ai-section-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #0369a1;
+      margin-bottom: 4px;
+    }
+    .ai-list { margin: 0; padding-left: 14px; }
+    .ai-list li { margin-bottom: 3px; font-size: 9pt; }
+
+    .opportunity-card { border-left-color: #16a34a; background: #f0fdf4; }
+    .opportunity-card .ai-section-label { color: #15803d; }
+    .risk-card { border-left-color: #dc2626; background: #fff1f2; }
+    .risk-card .ai-section-label { color: #b91c1c; }
+    .action-card { border-left-color: #d97706; background: #fffbeb; }
+    .action-card .ai-section-label { color: #b45309; }
+
+    /* ── Fallback / unavailable note ─────────────────────────────────────── */
+    .ai-unavailable {
+      background: #fef9c3;
+      border: 1px dashed #ca8a04;
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 9pt;
+      color: #713f12;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────────── */
+    .footer {
+      margin-top: 20px;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 7.5pt;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+    .confidential { color: #64748b; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-brand">rastera<span>.</span>io</div>
+    <div class="header-meta">
+      Site Intelligence Report<br>
+      {{ industry_template }} Template &nbsp;·&nbsp; {{ generated_at }}
+    </div>
+  </div>
+
+  <!-- Site banner + score -->
+  <div class="site-banner">
+    <div>
+      <h1>{{ site_name }}</h1>
+      <p>{{ address }} &nbsp;·&nbsp; {{ lat }}, {{ lon }} &nbsp;·&nbsp; Trade area: {{ radius_m }} m radius</p>
+      <p style="margin-top:4px;font-size:8pt;color:#94a3b8;">Site ID: {{ site_id }}</p>
+    </div>
+    <div class="score-badge">
+      <div class="score-number">{{ score | int }}</div>
+      <div class="score-label">{{ score_label }}</div>
+      <div class="score-sub">out of 100</div>
+    </div>
+  </div>
+
+  <!-- Score Drivers -->
+  <div class="section">
+    <div class="section-title">Score Drivers</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:22%">Driver</th>
+          <th style="width:10%;text-align:center">Impact</th>
+          <th>Analysis</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in drivers %}
+        <tr>
+          <td><strong>{{ d.name }}</strong></td>
+          <td style="text-align:center">
+            {% if d.impact >= 15 %}
+              <span class="impact-positive">+{{ d.impact }}</span>
+            {% elif d.impact >= 8 %}
+              <span class="impact-neutral">+{{ d.impact }}</span>
+            {% else %}
+              <span class="impact-negative">+{{ d.impact }}</span>
+            {% endif %}
+          </td>
+          <td>{{ d.reason }}</td>
+        </tr>
+        {% endfor %}
+        <tr style="background:#0f172a;color:#f8fafc;font-weight:700;">
+          <td>TOTAL SCORE</td>
+          <td style="text-align:center;color:{{ score_color }};">{{ score }}</td>
+          <td style="color:#94a3b8;font-size:8pt;">Composite weighted score (max 100)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Competitive + Market -->
+  <div class="section two-col">
+
+    <!-- Competitor Summary -->
+    <div class="col">
+      <div class="section-title">Competitive Landscape</div>
+      {% if competitor_summary %}
+        <div class="pill-list">
+          {% for cat, count in competitor_summary.items() %}
+            <div class="pill">{{ count }} {{ cat }}</div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color:#94a3b8;font-size:9pt;">No POIs found within trade area.</p>
+      {% endif %}
+    </div>
+
+    <!-- Market Summary -->
+    <div class="col">
+      <div class="section-title">Market Indicators</div>
+      <div class="stat-card">
+        <div class="stat-label">Total POIs in Trade Area</div>
+        <div class="stat-value">{{ market_summary.total_pois_in_radius }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">POI Density</div>
+        <div class="stat-value">{{ market_summary.poi_density_per_km2 }} / km²</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Foot Traffic Anchors</div>
+        <div class="stat-value">{{ market_summary.foot_traffic_indicators }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Market Activity Score</div>
+        <div class="stat-value">{{ market_summary.market_activity_score }} / 100</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AI Narrative -->
+  <div class="section">
+    <div class="section-title">AI Site Intelligence</div>
+
+    {% if ai_summary %}
+
+      <!-- Executive Summary -->
+      <div class="ai-card">
+        <div class="ai-section-label">Executive Summary</div>
+        {{ ai_summary.executive_summary }}
+      </div>
+
+      <div class="two-col">
+        <div class="col">
+          <!-- Opportunities -->
+          <div class="ai-card opportunity-card">
+            <div class="ai-section-label">Opportunities</div>
+            <ul class="ai-list">
+              {% for opp in ai_summary.opportunities %}
+                <li>{{ opp }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <div class="col">
+          <!-- Risks -->
+          <div class="ai-card risk-card">
+            <div class="ai-section-label">Risks</div>
+            <ul class="ai-list">
+              {% for risk in ai_summary.risks %}
+                <li>{{ risk }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next Actions -->
+      <div class="ai-card action-card">
+        <div class="ai-section-label">Recommended Next Actions</div>
+        <ul class="ai-list">
+          {% for action in ai_summary.next_actions %}
+            <li>{{ action }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    {% else %}
+      <div class="ai-unavailable">
+        AI narrative was not generated for this report. Run <code>POST /v1/site/ai-summary</code>
+        with <code>site_id={{ site_id }}</code> to generate insights, then re-download the PDF.
+      </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="confidential">CONFIDENTIAL — Rastera Demo Platform</span>
+    <span>Generated {{ generated_at }} &nbsp;·&nbsp; rastera.io</span>
+  </div>
+
+</body>
+</html>
