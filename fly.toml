@@ -1,7 +1,7 @@
 # fly.toml — Rastera Engine deployment config for Fly.io
 # https://fly.io/docs/reference/configuration/
 
-app = "rastera-engine"
+app = "rastera-api"
 primary_region = "iad"   # Ashburn, Virginia (matches company location)
 
 [build]
