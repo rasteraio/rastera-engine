@@ -1,0 +1,40 @@
+# fly.toml — Rastera Engine deployment config for Fly.io
+# https://fly.io/docs/reference/configuration/
+
+app = "rastera-engine"
+primary_region = "iad"   # Ashburn, Virginia (matches company location)
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV      = "production"
+  LOG_LEVEL    = "INFO"
+  ALLOWED_ORIGINS = "https://rastera.io,https://www.rastera.io"
+
+[http_service]
+  internal_port        = 8080
+  force_https          = true
+  auto_stop_machines   = false
+  auto_start_machines  = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type       = "requests"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus     = 1
+  memory   = "512mb"   # WeasyPrint needs ~256 MB headroom
+
+[checks]
+  [checks.health]
+    grace_period = "30s"
+    interval     = "15s"
+    method       = "GET"
+    path         = "/health"
+    port         = 8080
+    timeout      = "5s"
+    type         = "http"
